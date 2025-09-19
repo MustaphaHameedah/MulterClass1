@@ -129,6 +129,39 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
+// exports.deleteProduct = async (req, res) => {
+//   const productId = req.params.id;
+
+//   try {
+//     const product = await productModel.findByIdAndDelete(productId);
+//     if (!product) {
+//       return res.status(404).json({
+//         message: "Product not found",
+//       });
+//     }
+
+//     const data = {
+//       productName,
+//       description,
+//       price,
+//       quantity,
+//       image,
+//     };
+
+//     const oldFilePaths = data.image;
+//     const deleteFilePaths = fs.unlinkSync(oldFilePaths);
+
+//     return res.status(200).json({
+//       message: "Product deleted successfully",
+//       data: deleteFilePaths,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
 exports.deleteProduct = async (req, res) => {
   const { productId } = req.params;
   try {
@@ -159,6 +192,114 @@ exports.deleteProduct = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Error deleting product",
+      error: error.message,
+    });
+  }
+};
+
+exports.secondUpdate = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const { productName, description, price, quantity } = req.body;
+    const product = await productModel.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "product not found",
+      });
+    }
+    const files = req.files;
+
+    const data = {
+      productName: productName || product?.productName,
+      description: description || product?.description,
+      price: price || product?.price,
+      quantity: quantity || product?.quantity,
+      image: product.image,
+    };
+
+    const oldFilePath = product.image;
+    const imagePath = req.files.map((el) => el.path);
+
+    if (files && files[0]) {
+      oldFilePath.forEach((el) => {
+        const fileCheck = fs.existsSync(el);
+        if (fileCheck) {
+          console.log(fileCheck);
+        }
+      });
+
+      data.image = imagePath;
+    }
+
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      productId,
+      data,
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating product",
+      error: error.message,
+    });
+  }
+};
+exports.thirdUpdate = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const { productName, description, price, quantity, image } = req.body;
+    const product = await productModel.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "product not found",
+      });
+    }
+    const files = req.files;
+
+    const data = {
+      productName: productName || product?.productName,
+      description: description || product?.description,
+      price: price || product?.price,
+      quantity: quantity || product?.quantity,
+      image: product.image,
+    };
+
+    const oldFilePath = product.image;
+    const imagePath = req.files.map((el) => el.path);
+    console.log(imagePath);
+
+    if (files && files[0]) {
+      oldFilePath.filter((el) => {
+        if (el === image) {
+          const fileCheck = fs.existsSync(el);
+          console.log(fileCheck);
+
+          if (fileCheck) {
+            data.image = imagePath;
+          }
+        }
+      });
+    }
+
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      productId,
+      data,
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating product",
       error: error.message,
     });
   }
